@@ -1,0 +1,49 @@
+Query to create the table inside powerBrilliant database:
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE job_listings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    posted_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    organisation TEXT NOT NULL,
+    title JSONB NOT NULL,
+    description JSONB NOT NULL,
+    location TEXT NOT NULL,
+    job_type TEXT CHECK (job_type IN ('remote', 'hybrid', 'onsite')),
+    notice_period TEXT,
+    min_experience INT,
+    skills TEXT[],
+    salary_range TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    job_posted_by TEXT
+);
+
+
+
+----------------------------------------------------------------------------------------------------------
+
+                               Table "public.job_listings"
+     Column     |            Type             | Collation | Nullable |      Default
+----------------+-----------------------------+-----------+----------+--------------------
+ id             | uuid                        |           | not null | uuid_generate_v4()
+ posted_by      | uuid                        |           |          |
+ organisation   | text                        |           | not null |
+ title          | jsonb                       |           | not null |
+ description    | jsonb                       |           | not null |
+ location       | text                        |           | not null |
+ job_type       | text                        |           |          |
+ notice_period  | text                        |           |          |
+ min_experience | integer                     |           |          |
+ skills         | text[]                      |           |          |
+ salary_range   | text                        |           |          |
+ created_at     | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at     | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_active      | boolean                     |           |          | true
+Indexes:
+    "job_listings_pkey" PRIMARY KEY, btree (id)
+Check constraints:
+    "job_listings_job_type_check" CHECK (job_type = ANY (ARRAY['remote'::text, 'hybrid'::text, 'onsite'::text]))
+Foreign-key constraints:
+    "job_listings_posted_by_fkey" FOREIGN KEY (posted_by) REFERENCES users(id) ON DELETE SET NULL

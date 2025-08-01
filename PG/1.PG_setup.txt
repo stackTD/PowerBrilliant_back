@@ -1,0 +1,41 @@
+---------------------------------------------------------------------------------
+1. Install and setup the Postgres 
+- Visit: https://www.postgresql.org/download/windows/
+- Download and install the package
+
+--------------------------------------------------------------------------------
+2. Add the CLI path [\bin] to the environment variable path
+
+--------------------------------------------------------------------------------
+3. Verify the server is running or not by:
+- win + R
+- type "service.msc", hit enter
+- look for postgresSQL, Should be running else start
+
+---------------------------------------------------------------------------------
+4. open command prompt: [to create the tables]
+
+*- psql -U postgres
+- CREATE DATABASE powerbrilliant;
+*- \c powerbrilliant
+- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+- CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    mobile TEXT,
+    email TEXT UNIQUE NOT NULL,
+    organisation TEXT,
+    bio TEXT,
+    profile_pic TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+   );
+
+
+
+ALTER TABLE users ADD COLUMN resume_url TEXT;
+ALTER TABLE job_applications ADD COLUMN applied_at TIMESTAMP DEFAULT NOW();

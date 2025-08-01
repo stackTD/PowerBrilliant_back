@@ -1,0 +1,71 @@
+SQL query:
+
+CREATE TABLE posts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    community_id UUID REFERENCES communities(id) ON DELETE CASCADE,
+    author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    title JSONB,
+    content JSONB,
+    post_type TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+----------------------------------------------------------------------------------------------
+
+Schema:
+
+                                Table "public.posts"
+    Column    |            Type             | Collation | Nullable |      Default
+--------------+-----------------------------+-----------+----------+--------------------
+ id           | uuid                        |           | not null | uuid_generate_v4()
+ community_id | uuid                        |           |          |
+ author_id    | uuid                        |           |          |
+ title        | jsonb                       |           |          |
+ content      | jsonb                       |           |          |
+ post_type    | text                        |           |          |
+ created_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_active    | boolean                     |           |          | true
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "posts_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+    "posts_community_id_fkey" FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+
+--------------------------------------------------------------------------------------------
+
+Create post:
+POST http://localhost:8080/post/create
+
+    "community_id": "0ccfa542-24cd-4b47-ae63-f427e6e6afde", // Replace with actual community UUID
+    "author_id": "c9b2f4ba-cc88-49b1-98f5-c0f0841f91a2", // Replace with actual user UUID
+    "title": {
+        "en": "My second Post",
+        "hi": "मेरी पहली पोस्ट"
+    },
+    "content": {
+        "en": "This is my second post in the community",
+        "hi": "यह समुदाय में मेरी पहली पोस्ट है"
+    },
+    "post_type": "keeda",
+    "is_active": true
+}
+
+---------------------------------------------------------------------------------------
+
+Read/fetch post
+GET http://localhost:8080/post
+
+---------------------------------------------------------------------------------------
+
+Delete
+DELETE http://localhost:8080/post/delete/[id]
+
+---------------------------------------------------------------------------------------
+
+Update
+
+PUT http://localhost:8080/post/update/[id]
+{
+    "post_type":"Test"
+}

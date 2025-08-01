@@ -1,0 +1,172 @@
+------------------------------------------------------------------------------------------------------------------------------------
+
+                                  Table "public.users"
+    Column    |            Type             | Collation | Nullable |      Default
+--------------+-----------------------------+-----------+----------+--------------------
+ id           | uuid                        |           | not null | uuid_generate_v4()
+ first_name   | text                        |           | not null |
+ last_name    | text                        |           | not null |
+ username     | text                        |           | not null |
+ password     | text                        |           | not null |
+ mobile       | text                        |           |          |
+ email        | text                        |           | not null |
+ organisation | text                        |           |          |
+ bio          | text                        |           |          |
+ profile_pic  | text                        |           |          |
+ created_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_active    | boolean                     |           |          | true
+
+Multi-lingual support:
+- bio column
+
+
+in data base:
+
+ALTER TABLE users DROP COLUMN bio;
+
+ALTER TABLE users ADD COLUMN bio JSONB;
+
+
+
+in Struct
+
+use serde_json::Value;
+
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct User {
+    // ...
+    pub bio: Option<Value>,  // for multilingual text
+    // ...
+}
+
+
+
+in create user struct
+#[derive(Deserialize)]
+pub struct CreateUser {
+    pub first_name: String,
+    pub last_name: String,
+    pub username: String,
+    pub password: String,
+    pub email: String,
+    pub bio: Option<serde_json::Value>,  // Optional
+}
+
+
+If you want your API to respond in the user's preferred language, accept a language header:
+
+use actix_web::{HttpRequest};
+
+fn get_lang(req: &HttpRequest) -> String {
+    req.headers()
+        .get("Accept-Language")
+        .and_then(|val| val.to_str().ok())
+        .unwrap_or("en")
+        .to_string()
+}
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+ Step-by-Step: Handle Accept-Language in Actix Web
+
+You’ll add it to your handler function — here’s how.
+🔁 1. Modify the handler to accept HttpRequest
+
+In user_handler.rs:
+
+use actix_web::{web, HttpRequest, HttpResponse};
+use uuid::Uuid;
+use sqlx::PgPool;
+use crate::models::user::{CreateUser, User};
+use serde_json::json;
+
+pub async fn create_user(
+    req: HttpRequest,                     // 👈 new
+    db: web::Data<PgPool>,
+    json: web::Json<CreateUser>,
+) -> HttpResponse {
+    let lang = get_lang(&req);            // 👈 language extraction
+    println!("Language preference: {}", lang);
+
+    let user = sqlx::query_as::<_, User>(
+        r#"
+        INSERT INTO users (id, first_name, last_name, username, password, email, bio)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+        "#
+    )
+    .bind(Uuid::new_v4())
+    .bind(&json.first_name)
+    .bind(&json.last_name)
+    .bind(&json.username)
+    .bind(&json.password)
+    .bind(&json.email)
+    .bind(&json.bio) // expects JSON { "en": "...", "hi": "..." }
+    .fetch_one(db.get_ref())
+    .await;
+
+    match user {
+        Ok(u) => {
+            // Optional: extract only the desired language field from JSON
+            let response_bio = u.bio.as_ref().and_then(|b| b.get(&lang)).cloned();
+
+            let response = json!({
+                "id": u.id,
+                "username": u.username,
+                "bio": response_bio,
+                "email": u.email
+            });
+
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            eprintln!("DB error: {:?}", e);
+            HttpResponse::InternalServerError().body("Error creating user")
+        }
+    }
+}
+
+🔍 2. Language extraction function
+
+Put this helper inside the same file or a utils module:
+
+fn get_lang(req: &HttpRequest) -> String {
+    req.headers()
+        .get("Accept-Language")
+        .and_then(|val| val.to_str().ok())
+        .map(|s| {
+            if s.contains("hi") {
+                "hi"
+            } else {
+                "en"
+            }
+        })
+        .unwrap_or("en")
+        .to_string()
+}
+
+🧪 3. Testing with curl or Postman
+🗣 With Hindi
+
+curl -X POST http://localhost:8080/users \
+-H "Content-Type: application/json" \
+-H "Accept-Language: hi" \
+-d '{
+  "first_name": "Amit",
+  "last_name": "Verma",
+  "username": "amitv",
+  "password": "1234",
+  "email": "amit@example.com",
+  "bio": { "en": "Power user", "hi": "शक्ति उपयोगकर्ता" }
+}'
+
+🌍 With English
+
+-H "Accept-Language: en"
+
+Let me know if you want this same multilingual logic applied to posts, comments, or anywhere else.
+
+
+C

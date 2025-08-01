@@ -1,0 +1,71 @@
+SQL query:
+CREATE TABLE comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+    author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    content JSONB NOT NULL,
+    parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+
+-------------------------------------------------------------------------------------------
+                               Table "public.comments"
+   Column   |            Type             | Collation | Nullable |      Default
+------------+-----------------------------+-----------+----------+--------------------
+ id         | uuid                        |           | not null | uuid_generate_v4()
+ post_id    | uuid                        |           |          |
+ author_id  | uuid                        |           |          |
+ content    | jsonb                       |           | not null |
+ parent_id  | uuid                        |           |          |
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_active  | boolean                     |           |          | true
+Indexes:
+    "comments_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "comments_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+    "comments_parent_id_fkey" FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+    "comments_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_parent_id_fkey" FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+
+
+----------------------------------------------------------------------------------------------------------
+
+Create comment:
+
+POST http://localhost:8080/comment/create
+
+{
+    "post_id":"a59a6ca2-9597-44fb-bae2-11e208dfce2f",
+    "author_id":"c9b2f4ba-cc88-49b1-98f5-c0f0841f91a2",
+    "content": {
+        "en": "This is a top-level comment",
+        "hi": "यह एक टॉप-लेवल टिप्पणी है"
+    },
+    "parent_id": null,
+    "is_active": true
+
+}
+
+
+------------------------------------------------------------------------------
+
+fetch comments
+GET http://localhost:8080/comment
+
+------------------------------------------------------------------------------
+
+Delete comment:
+DELETE http://localhost:8080/comment/delete/[id]
+
+------------------------------------------------------------------------------
+
+Update comment:
+PUT http://localhost:8080/comment/update/[id]
+
+ALTER TABLE comments ADD COLUMN author_type TEXT CHECK (author_type IN ('user', 'business')) DEFAULT 'user';
+
+
+ALTER TABLE comments DROP CONSTRAINT comments_author_id_fkey;

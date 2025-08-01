@@ -1,0 +1,9 @@
+{
+    "first_name": "Divyank",
+    "last_name": "Jain",
+    "username": "DJ",
+    "password": "secure123",
+    "email": "alice@example.com",
+    "mobile": "9876543210",
+    "organisation": "PowerBI Wizards"
+}

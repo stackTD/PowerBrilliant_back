@@ -1,0 +1,31 @@
+CREATE TABLE job_applications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id UUID REFERENCES job_listings(id) ON DELETE CASCADE,
+    applicant_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    cover_letter TEXT,
+    resume_url TEXT,
+    application_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT DEFAULT 'applied',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+      Column      |            Type             | Collation | Nullable |      Default
+------------------+-----------------------------+-----------+----------+--------------------
+ id               | uuid                        |           | not null | uuid_generate_v4()
+ job_id           | uuid                        |           |          |
+ applicant_id     | uuid                        |           |          |
+ cover_letter     | text                        |           |          |
+ resume_url       | text                        |           |          |
+ application_date | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ status           | text                        |           |          | 'applied'::text
+ updated_at       | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_active        | boolean                     |           |          | true
+Indexes:
+    "job_applications_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "job_applications_applicant_id_fkey" FOREIGN KEY (applicant_id) REFERENCES users(id) ON DELETE CASCADE
+    "job_applications_job_id_fkey" FOREIGN KEY (job_id) REFERENCES job_listings(id) ON DELETE CASCADE

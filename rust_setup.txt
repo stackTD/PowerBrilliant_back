@@ -1,0 +1,15 @@
+Go to: 👉 https://www.rust-lang.org/tools/install
+
+Click “Download rustup-init.exe”
+
+Run the downloaded .exe file.
+
+Follow the on-screen instructions — choose default install.
+
+
+--------------------------------------------------------------------
+
+Verify the installation in cmd by:
+
+- rustc --version
+- cargo --version

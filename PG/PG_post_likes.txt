@@ -1,0 +1,54 @@
+Query:
+CREATE TABLE post_likes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    liked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_liked BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(post_id, user_id)
+);
+
+-------------------------------------------------------------------------------
+
+Schema:
+
+                              Table "public.post_likes"
+   Column   |            Type             | Collation | Nullable |      Default
+------------+-----------------------------+-----------+----------+--------------------
+ id         | uuid                        |           | not null | uuid_generate_v4()
+ post_id    | uuid                        |           |          |
+ user_id    | uuid                        |           |          |
+ liked_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_liked   | boolean                     |           |          | true
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "post_likes_pkey" PRIMARY KEY, btree (id)
+    "post_likes_post_id_user_id_key" UNIQUE CONSTRAINT, btree (post_id, user_id)
+Foreign-key constraints:
+    "post_likes_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    "post_likes_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+
+
+---------------------------------------------------------------------------------------
+
+create_like:
+POST http://localhost:8080/post_like/create
+{
+    "post_id":"a59a6ca2-9597-44fb-bae2-11e208dfce2f",
+    "user_id":"c9b2f4ba-cc88-49b1-98f5-c0f0841f91a2",
+    "is_liked": true
+}
+
+--------------------------------------------------------------------------------------
+
+update liked_at
+
+PUT http://localhost:8080/post_like/update/[id]
+
+
+updates :
+
+ALTER TABLE post_likes ADD COLUMN user_type TEXT CHECK (user_type IN ('user', 'business'));
+ALTER TABLE post_likes DROP CONSTRAINT post_likes_user_id_fkey;

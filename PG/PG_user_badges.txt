@@ -1,0 +1,45 @@
+Query:
+CREATE TABLE user_badges (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    badge_name TEXT NOT NULL,
+    badge_icon TEXT,
+    awarded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+------------------------------------------------------------------------------------
+
+Schema:
+                              Table "public.user_badges"
+   Column   |            Type             | Collation | Nullable |      Default
+------------+-----------------------------+-----------+----------+--------------------
+ id         | uuid                        |           | not null | uuid_generate_v4()
+ user_id    | uuid                        |           |          |
+ badge_name | text                        |           | not null |
+ badge_icon | text                        |           |          |
+ awarded_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "user_badges_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "user_badges_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+--------------------------------------------------------------------------------------
+Create badge:
+POST http://localhost:8080/user_badges/create
+
+{
+    "user_id":"c9b2f4ba-cc88-49b1-98f5-c0f0841f91a2",
+    "badge_name":"Ultimate coder",
+    "badge_icon":"TING LING"
+}
+
+---------------------------------------------------------------------------------------
+
+Fetch badges:
+GET http://localhost:8080/user_badges
+
+---------------------------------------------------------------------------------------
+
+delete badges:
+
+DELETE http://localhost:8080/user_badges/delete/[id]

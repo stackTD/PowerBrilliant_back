@@ -1,0 +1,26 @@
+                               Table "public.job_listings"
+     Column     |            Type             | Collation | Nullable |      Default
+----------------+-----------------------------+-----------+----------+--------------------
+ id             | uuid                        |           | not null | uuid_generate_v4()
+ posted_by      | uuid                        |           | not null |
+ applied_by     | uuid                        |           |          |
+ organisation   | text                        |           | not null |
+ title          | jsonb                       |           | not null |
+ description    | jsonb                       |           | not null |
+ location       | text                        |           | not null |
+ job_type       | text                        |           |          |
+ notice_period  | text                        |           |          |
+ min_experience | integer                     |           |          |
+ skills         | text[]                      |           |          |
+ salary_range   | text                        |           |          |
+ created_at     | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at     | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ is_active      | boolean                     |           |          | true
+ job_posted_by  | text                        |           |          |
+Indexes:
+    "job_listings_pkey" PRIMARY KEY, btree (id)
+Check constraints:
+    "job_listings_job_type_check" CHECK (job_type = ANY (ARRAY['remote'::text, 'hybrid'::text, 'onsite'::text]))
+Foreign-key constraints:
+    "fk_applied_by_user" FOREIGN KEY (applied_by) REFERENCES users(id) ON DELETE SET NULL
+    "fk_posted_by_business_accounts" FOREIGN KEY (posted_by) REFERENCES business_accounts(id) ON DELETE CASCADE

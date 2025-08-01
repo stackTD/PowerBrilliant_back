@@ -1,0 +1,62 @@
+Query:
+CREATE TABLE community_members (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    community_id UUID REFERENCES communities(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    role TEXT DEFAULT 'member',
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(community_id, user_id)
+);
+
+
+Schema:
+
+                           Table "public.community_members"
+    Column    |            Type             | Collation | Nullable |      Default
+--------------+-----------------------------+-----------+----------+--------------------
+ id           | uuid                        |           | not null | uuid_generate_v4()
+ community_id | uuid                        |           |          |
+ user_id      | uuid                        |           |          |
+ role         | text                        |           |          | 'member'::text
+ joined_at    | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "community_members_pkey" PRIMARY KEY, btree (id)
+    "community_members_community_id_user_id_key" UNIQUE CONSTRAINT, btree (community_id, user_id)
+Foreign-key constraints:
+    "community_members_community_id_fkey" FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+    "community_members_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+Create/add member:
+POST: http://localhost:8080/community_member/create
+{
+    "community_id":"0ccfa542-24cd-4b47-ae63-f427e6e6afde",
+    "user_id": "c9b2f4ba-cc88-49b1-98f5-c0f0841f91a2",
+    "role": "Admin"
+}
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+fetch_all:
+
+GET: http://localhost:8080/community_member
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+delete member:
+
+DELETE: http://localhost:8080/community_member/delete/{id}
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+update member: [only role]
+
+PUT: http://localhost:8080/community_member/update/{id}
+
+{
+    "role":"Senior"
+}
+
+
+

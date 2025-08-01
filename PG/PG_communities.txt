@@ -1,0 +1,67 @@
+sql query:
+
+CREATE TABLE communities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description JSONB,
+    creator_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    banner_url TEXT,
+    is_public BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+---------------------------------------------------------------------------
+
+Structure:
+
+                              Table "public.communities"
+   Column    |            Type             | Collation | Nullable |      Default
+-------------+-----------------------------+-----------+----------+--------------------
+ id          | uuid                        |           | not null | uuid_generate_v4()
+ name        | text                        |           | not null |
+ description | jsonb                       |           |          |
+ creator_id  | uuid                        |           |          |
+ banner_url  | text                        |           |          |
+ is_public   | boolean                     |           |          | true
+ is_active   | boolean                     |           |          | true
+ created_at  | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "communities_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "communities_creator_id_fkey" FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE SET NULL
+
+
+-----------------------------------------------------------
+
+Create: POST http://localhost:8080/communities/create
+{
+    "id": "462ab5b4-8df2-4f37-8528-97577e887e1d",
+    "name": "Rust Developers Community",
+    "description": {
+        "en": "A community for Rust developers to share knowledge and experiences",
+        "hi": "रस्ट डेवलपर्स के लिए एक समुदाय"
+    },
+    "creator_id": "c9b2f4ba-cc88-49b1-98f5-c0f0841f91a2",
+    "banner_url": "https://example.com/banner.jpg",
+    "is_public": true,
+    "is_active": true,
+    "created_at": "2025-05-26T04:19:57.191803"
+}
+-----------------------------------------------------------------------------------------
+
+Fetch: GET http://localhost:8080/communities
+
+-----------------------------------------------------------------------------------------
+
+Delete: DELETE http://localhost:8080/communities/delete/462ab5b4-8df2-4f37-8528-97577e887e1d
+
+-----------------------------------------------------------------------------------------
+
+Update: PUT http://localhost:8080/communities/update/462ab5b4-8df2-4f37-8528-97577e887e1d
+
+{
+    "name":"Tri test",
+    "is_public": false
+}
