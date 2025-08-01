@@ -3,6 +3,7 @@ mod models;
 mod handlers;
 mod routes;
 mod oauth;
+mod config;
 
 use actix_web::{App, HttpServer, web};
 use actix_files::Files;
@@ -12,6 +13,7 @@ use actix_cors::Cors;  // Add this line
 use db::init_db;
 use env_logger::Env;
 use oauth::create_google_oauth_client;
+use config::load_config;
 
 use routes::{
     google_routes,
@@ -24,13 +26,22 @@ mod faker;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
-    env_logger::init_from_env(Env::default().default_filter_or("debug"));
+    // Load configuration from environment variables
+    let config = load_config();
+    
+    // Initialize logging with the configured level
+    env_logger::init_from_env(Env::default().default_filter_or(&config.rust_log));
 
-    let db = init_db().await;
-    let google_oauth_client = create_google_oauth_client();
+    println!("🌟 PowerBrilliant Server Starting...");
+    println!("📊 Environment: {}", config.app_env);
+    println!("🔌 Database: Connected");
+    println!("🔑 OAuth: Configured");
 
-    println!("🚀 Running on http://localhost:8080");
+    let db = init_db(&config).await;
+    let google_oauth_client = create_google_oauth_client(&config);
+
+    let server_address = format!("{}:{}", config.api_host, config.api_port);
+    println!("🚀 Running on http://{}", server_address);
 
     // faker::seed_fake_users(&db, 100).await;
     // faker::seed_fake_communities(&db, 50).await;
@@ -48,6 +59,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(cors)  // Add the CORS middleware
             .app_data(web::Data::new(db.clone()))
+            .app_data(web::Data::new(config.clone()))
            .service(
     Files::new("/uploads", "./uploads")
         .show_files_listing()
@@ -72,7 +84,7 @@ async fn main() -> std::io::Result<()> {
             // Register the share routes
             .configure(configure)
     })
-    .bind("127.0.0.1:8080")?
+    .bind(&server_address)?
     .run()
     .await
 }

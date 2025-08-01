@@ -12,6 +12,7 @@ use uuid::Uuid;
 // Note: Ensure the `CreateUser` struct in `models/user.rs` also has `profile_pic: Option<String>`
 use crate::models::user::{CreateUser, User}; 
 use crate::oauth::create_google_oauth_client;
+use crate::config::Config;
 
 #[derive(Deserialize, Debug)]
 struct GoogleUser {
@@ -51,6 +52,8 @@ pub async fn google_login(oauth_client: web::Data<BasicClient>) -> impl Responde
 pub async fn google_callback(
     params: web::Query<std::collections::HashMap<String, String>>,
     db: web::Data<PgPool>,
+    oauth_client: web::Data<BasicClient>,
+    config: web::Data<Config>,
 ) -> impl Responder {
     let code = match params.get("code") {
         Some(c) => AuthorizationCode::new(c.clone()),
@@ -60,7 +63,7 @@ pub async fn google_callback(
         }
     };
 
-    let client = create_google_oauth_client();
+    let client = oauth_client.get_ref();
     let token = match client
         .exchange_code(code)
         .request_async(oauth2::reqwest::async_http_client)
@@ -167,7 +170,7 @@ pub async fn google_callback(
         exp: (Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
     };
 
-    let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "your_default_secret".to_string());
+    let jwt_secret = &config.jwt_secret;
     let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(jwt_secret.as_bytes())) {
         Ok(t) => t,
         Err(e) => {
